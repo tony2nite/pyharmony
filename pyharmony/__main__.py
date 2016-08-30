@@ -75,11 +75,9 @@ def show_current_activity(args):
     current_activity_id = client.get_current_activity()
 
     activity = [x for x in config['activity'] if int(x['id']) == current_activity_id][0]
-
-    pprint(activity)
-
+ 
     client.disconnect(send_close=True)
-    return 0
+    return activity['label']
 
 def power_off(args):
     """Connects to the Harmony and syncs it.
