@@ -11,7 +11,7 @@ import requests
 import sleekxmpp
 from sleekxmpp.xmlstream import ET
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 # The Logitech authentication service URL.
 LOGITECH_AUTH_URL = ('https://svcs.myharmony.com/CompositeSecurityServices/'
@@ -33,18 +33,18 @@ def login(username, password):
     data = json.dumps(data)
     resp = requests.post(LOGITECH_AUTH_URL, headers=headers, data=data)
     if resp.status_code != 200:
-        LOGGER.error('Received response code %d from Logitech.',
+        _LOGGER.error('Received response code %d from Logitech.',
                      resp.status_code)
-        LOGGER.error('Data: \n%s\n', resp.text)
+        _LOGGER.error('Data: \n%s\n', resp.text)
         return
 
     result = resp.json().get('GetUserAuthTokenResult', None)
     if not result:
-        LOGGER.error('Malformed JSON (GetUserAuthTokenResult): %s', resp.json())
+        _LOGGER.error('Malformed JSON (GetUserAuthTokenResult): %s', resp.json())
         return
     token = result.get('UserAuthToken', None)
     if not token:
-        LOGGER.error('Malformed JSON (UserAuthToken): %s', resp.json())
+        _LOGGER.error('Malformed JSON (UserAuthToken): %s', resp.json())
         return
     return token
 
@@ -91,7 +91,7 @@ class SwapAuthToken(sleekxmpp.ClientXMPP):
         match = re.search(r'identity=(?P<uuid>[\w-]+):status', oa_resp.text)
         assert match
         self.uuid = match.group('uuid')
-        LOGGER.info('Received UUID from device: %s', self.uuid)
+        _LOGGER.info('Received UUID from device: %s', self.uuid)
         self.disconnect(send_close=False)
 
 

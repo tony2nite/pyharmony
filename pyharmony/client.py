@@ -1,21 +1,16 @@
 """Client class for connecting to the Logitech Harmony."""
-from __future__ import print_function
 import json
-import logging
 import time
-
 import sleekxmpp
 from sleekxmpp.xmlstream import ET
 
-
-LOGGER = logging.getLogger(__name__)
 
 
 class HarmonyClient(sleekxmpp.ClientXMPP):
     """An XMPP client for connecting to the Logitech Harmony."""
 
     def __init__(self, auth_token):
-        user = '%s@connect.logitech.com/gatorade.' % auth_token
+        user='%s@connect.logitech.com/gatorade.' % auth_token
         password = auth_token
         plugin_config = {
             # Enables PLAIN authentication which is off by default.
@@ -112,13 +107,13 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         action_cmd.attrib['xmlns'] = 'connect.logitech.com'
         action_cmd.attrib['mime'] = (
             'vnd.logitech.harmony/vnd.logitech.harmony.engine?holdAction')
-        action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"'+device_id+'","command"::"'+command+'"}:status=press'
+        action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"' + device_id + '","command"::"' + command + '"}:status=press'
         iq_cmd.set_payload(action_cmd)
         result = iq_cmd.send(block=False)
 
         action_cmd.attrib['mime'] = (
             'vnd.logitech.harmony/vnd.logitech.harmony.engine?holdAction')
-        action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"'+device_id+'","command"::"'+command+'"}:status=release'
+        action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"' + device_id + '","command"::"' + command + '"}:status=release'
         iq_cmd.set_payload(action_cmd)
         result = iq_cmd.send(block=False)
 
@@ -137,6 +132,7 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
             self.start_activity(-1)
         return True
 
+
 def create_and_connect_client(ip_address, port, token):
     """Creates a Harmony client and initializes session.
 
@@ -149,6 +145,7 @@ def create_and_connect_client(ip_address, port, token):
       An instance of HarmonyClient that is connected.
     """
     client = HarmonyClient(token)
+    # LOGGER.fatal('PreConnect')
     client.connect(address=(ip_address, port),
                    use_tls=False, use_ssl=False)
     client.process(block=False)
