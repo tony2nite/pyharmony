@@ -15,6 +15,12 @@ logger.setLevel(logging.ERROR)
 # Trim down log file spam from imported modules
 logging.getLogger('sleekxmpp').setLevel(logging.CRITICAL)
 logging.getLogger('requests').setLevel(logging.CRITICAL)
+logging.getLogger('pyharmony').setLevel(logging.CRITICAL)
+
+
+def pprint(obj):
+    """Pretty JSON dump of an object."""
+    print(json.dumps(obj, sort_keys=True, indent=4, separators=(',', ': ')))
 
 
 def login_to_logitech(email, password, harmony_ip, harmony_port):
@@ -50,15 +56,16 @@ def get_client(email, password, harmony_ip, harmony_port):
         harmony_port (str): Harmony hub port
 
     Returns:
-        Authenticated client instance.
+        object: Authenticated client instance.
     """
     token = login_to_logitech(email, password, harmony_ip, harmony_port)
     client = harmony_client.create_and_connect_client(harmony_ip, harmony_port, token)
     return client
 
 
-def get_config(email, password, harmony_ip, harmony_port):
-    """Connects to the Harmony and return current configuration.
+# Functions for use when module is imported
+def ha_get_config(email, password, harmony_ip, harmony_port):
+    """Connects to the Harmony and generates a text file containing all activites and commands programmed to hub.
 
     Args:
         email (str):  Email address used to login to Logitech service
@@ -67,7 +74,7 @@ def get_config(email, password, harmony_ip, harmony_port):
         harmony_port (str): Harmony hub port
 
     Returns:
-        Dictionary containing hub configuration data.
+        Dictionary containing Harmony device configuration
     """
     client = get_client(email, password, harmony_ip, harmony_port)
     config = client.get_config()
@@ -75,7 +82,38 @@ def get_config(email, password, harmony_ip, harmony_port):
     return config
 
 
-def get_activities(email, password, harmony_ip, harmony_port):
+def ha_get_config_file(email, password, harmony_ip, harmony_port, path):
+    """Connects to the Harmony and generates a text file containing all activites and commands programmed to hub.
+
+    Args:
+        email (str):  Email address used to login to Logitech service
+        password (str): Password used to login to Logitech service
+        harmony_ip (str): Harmony hub IP address
+        harmony_port (str): Harmony hub port
+        path (str): Full path to file that function will write activity and command information
+
+    Returns:
+        True
+    """
+    client = get_client(email, password, harmony_ip, harmony_port)
+    config = client.get_config()
+    client.disconnect(send_close=True)
+
+    with open(path, 'w+') as file_out:
+        file_out.write('Activities\n')
+        for activity in config['activity']:
+            file_out.write('  ' + activity['label'] + '\n')
+
+        file_out.write('\nDevice Commands\n')
+        for device in config['device']:
+            file_out.write('  ' + device['deviceId'] + ' - ' + device['label'] + '\n')
+            for controlGroup in device['controlGroup']:
+                for function in controlGroup['function']:
+                    file_out.write('    ' + function['name'] + '\n')
+    return True
+
+
+def ha_get_activities(email, password, harmony_ip, harmony_port):
     """Connects to the Harmony hub and returns configured activities.
 
     Args:
@@ -87,7 +125,7 @@ def get_activities(email, password, harmony_ip, harmony_port):
     Returns:
         Dictionary containing activity label and ID number.
     """
-    config = show_config(email, password, harmony_ip, harmony_port)
+    config = ha_get_config(email, password, harmony_ip, harmony_port)
     activities = {}
     for activity in config['activity']:
         activities[activity['label']] = activity['id']
@@ -98,7 +136,7 @@ def get_activities(email, password, harmony_ip, harmony_port):
         return activities
 
 
-def get_current_activity(email, password, harmony_ip, harmony_port):
+def ha_get_current_activity(email, password, harmony_ip, harmony_port):
     """Returns Harmony hub's current activity.
 
     Args:
@@ -122,7 +160,7 @@ def get_current_activity(email, password, harmony_ip, harmony_port):
         return 'Unknown'
 
 
-def start_activity(email, password, harmony_ip, harmony_port, new_activity):
+def ha_start_activity(email, password, harmony_ip, harmony_port, new_activity):
     """Connects to Harmony Hub and starts an activity
 
     Args:
@@ -165,7 +203,7 @@ def start_activity(email, password, harmony_ip, harmony_port, new_activity):
             return False
 
 
-def power_off(email, password, harmony_ip, harmony_port):
+def ha_power_off(email, password, harmony_ip, harmony_port):
     """Power off Harmony Hub.
 
     Args:
@@ -188,7 +226,7 @@ def power_off(email, password, harmony_ip, harmony_port):
         return False
 
 
-def send_command(email, password, harmony_ip, harmony_port, device_id, new_command):
+def ha_send_command(email, password, harmony_ip, harmony_port, device_id, new_command):
     """Connects to the Harmony and send a simple command.
 
     Args:
@@ -209,7 +247,7 @@ def send_command(email, password, harmony_ip, harmony_port, device_id, new_comma
     return 0
 
 
-def sync(email, password, harmony_ip, harmony_port):
+def ha_sync(email, password, harmony_ip, harmony_port):
     """Syncs Harmony hub to web service.
     Args:
         email (str):  Email address used to login to Logitech service
@@ -226,13 +264,118 @@ def sync(email, password, harmony_ip, harmony_port):
     return 0
 
 
-def pprint(obj):
-    """Pretty JSON dump of an object."""
-    print(json.dumps(obj, sort_keys=True, indent=4, separators=(',', ': ')))
+# Functions for Use on Command Line
+def show_config(args):
+    """Connects to the Harmony and return current configuration.
+
+    Args:
+        args (argparse): Argparse object containing required variables from command line
+
+    """
+    client = get_client(args.email, args.password, args.harmony_ip, args.harmony_port)
+    config = client.get_config()
+    client.disconnect(send_close=True)
+    pprint(config)
+
+
+def show_current_activity(args):
+    """Returns Harmony hub's current activity.
+
+    Args:
+        args (argparse): Argparse object containing required variables from command line
+
+    """
+    client = get_client(args.email, args.password, args.harmony_ip, args.harmony_port)
+    config = client.get_config()
+    current_activity_id = client.get_current_activity()
+    client.disconnect(send_close=True)
+    activity = [x for x in config['activity'] if int(x['id']) == current_activity_id][0]
+    if type(activity) is dict:
+        print(activity['label'])
+    else:
+        logger.error('Unable to retrieve current activity')
+        print('Unknown')
+
+
+def start_activity(args):
+    """Connects to Harmony Hub and starts an activity
+
+    Args:
+        args (argparse): Argparse object containing required variables from command line
+
+    """
+    client = get_client(args.email, args.password, args.harmony_ip, args.harmony_port)
+    status = False
+
+    if (args.activity.isdigit()) or (args.activity == '-1'):
+        status = client.start_activity(args.activity)
+        client.disconnect(send_close=True)
+        if status:
+            print('Started Actvivity')
+        else:
+            logger.info('Activity start failed')
+    else:
+        config = client.get_config()
+        activities = config['activity']
+        labels_and_ids = dict([(a['label'], a['id']) for a in activities])
+        matching = [label for label in list(labels_and_ids.keys())
+                    if args.activity.lower() in label.lower()]
+        if len(matching) == 1:
+            activity = matching[0]
+            logger.info('Found activity named %s (id %s)' % (activity, labels_and_ids[activity]))
+            status = client.start_activity(labels_and_ids[activity])
+        client.disconnect(send_close=True)
+        if status:
+            print('Started:', args.activity)
+        else:
+            logger.error('found too many activities! %s' % (' '.join(matching)))
+
+
+def power_off(args):
+    """Power off Harmony Hub.
+
+    Args:
+        args (argparse): Argparse object containing required variables from command line
+
+    """
+    client = get_client(args.email, args.password, args.harmony_ip, args.harmony_port)
+    status = client.power_off()
+    client.disconnect(send_close=True)
+    if status:
+        print('Powered Off')
+    else:
+        logger.error('Power off failed')
+
+
+def send_command(args):
+    """Connects to the Harmony and send a simple command.
+
+    Args:
+        args (argparse): Argparse object containing required variables from command line
+
+    """
+    client = get_client(args.email, args.password, args.harmony_ip, args.harmony_port)
+    client.send_command(args.device_id, args.command)
+    client.disconnect(send_close=True)
+    print('Command Sent')
+
+
+def sync(args):
+    """Syncs Harmony hub to web service.
+    Args:
+        args (argparse): Argparse object containing required variables from command line
+
+    Returns:
+        Completion status
+    """
+    client = get_client(args.email, args.password, args.harmony_ip, args.harmony_port)
+    client.sync()
+    client.disconnect(send_close=True)
+    print('Sync complete')
+
 
 def main():
     """Main method for the script."""
-    ##?#??#
     parser = argparse.ArgumentParser(description='Pyharmony - Harmony device control',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -261,17 +404,16 @@ def main():
                         choices=list(loglevels.keys()),
                         help='Logging level to print to the console.')
 
-
     subparsers = parser.add_subparsers()
 
     show_config_parser = subparsers.add_parser('show_config', help='Print the Harmony device configuration.')
-    show_config_parser.set_defaults(func=get_config)
+    show_config_parser.set_defaults(func=show_config)
 
     show_activity_parser = subparsers.add_parser('show_current_activity', help='Print the current activity config.')
-    show_activity_parser.set_defaults(func=get_current_activity)
+    show_activity_parser.set_defaults(func=show_current_activity)
 
     start_activity_parser = subparsers.add_parser('start_activity', help='Switch to a different activity.')
-    start_activity_parser.add_argument('activity', help='Activity to switch to, id or label.')
+    start_activity_parser.add_argument('--activity', help='Activity to switch to, id or label.')
     start_activity_parser.set_defaults(func=start_activity)
 
     power_off_parser = subparsers.add_parser('power_off', help='Stop the activity.')
@@ -281,23 +423,18 @@ def main():
     sync_parser.set_defaults(func=sync)
 
     command_parser = subparsers.add_parser('send_command', help='Send a simple command.')
-    command_parser.add_argument('--device_id',help='Specify the device id to which we will send the command.')
-    command_parser.add_argument('--command',help='IR Command to send to the device.')
+    command_parser.add_argument('--device_id', help='Specify the device id to which we will send the command.')
+    command_parser.add_argument('--command', help='IR Command to send to the device.')
     command_parser.set_defaults(func=send_command)
-
-
-    # repl_parser = subparsers.add_parser(
-    #     'repl', help='Start a client repl')
-    # repl_parser.set_defaults(func=repl)
-
 
     args = parser.parse_args()
 
     logging.basicConfig(
         level=loglevels[args.loglevel],
         format='%(levelname)s:\t%(name)s\t%(message)s')
-    print (args)
+
     sys.exit(args.func(args))
+
 
 if __name__ == '__main__':
     main()

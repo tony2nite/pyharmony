@@ -1,19 +1,18 @@
 # Copyright (c) 2013, Jeff Terrace
 # All rights reserved.
 
-"""Contains authentication routines."""
+"""Authentication routines to conect to Logitech web service and Harmony devices."""
 
 import json
 import logging
 import re
-
 import requests
 import sleekxmpp
 from sleekxmpp.xmlstream import ET
 
-_LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
-# The Logitech authentication service URL.
+#Logitech authentication service URL.
 LOGITECH_AUTH_URL = ('https://svcs.myharmony.com/CompositeSecurityServices/'
                      'Security.svc/json/GetUserAuthToken')
 
@@ -22,29 +21,29 @@ def login(username, password):
     """Logs in to the Logitech Harmony web service.
 
     Args:
-      username: The username (email address).
-      password: The user's password.
+        username (str): The username (email address).
+        password (str): The user's password.
 
     Returns:
-      A base64-encoded string containing a 48-byte Login Token.
+        A base64-encoded string containing a 48-byte Login Token.
     """
     headers = {'content-type': 'application/json; charset=utf-8'}
     data = {'email': username, 'password': password}
     data = json.dumps(data)
     resp = requests.post(LOGITECH_AUTH_URL, headers=headers, data=data)
     if resp.status_code != 200:
-        _LOGGER.error('Received response code %d from Logitech.',
+        logger.error('Received response code %d from Logitech.',
                      resp.status_code)
-        _LOGGER.error('Data: \n%s\n', resp.text)
+        logger.error('Data: \n%s\n', resp.text)
         return
 
     result = resp.json().get('GetUserAuthTokenResult', None)
     if not result:
-        _LOGGER.error('Malformed JSON (GetUserAuthTokenResult): %s', resp.json())
+        logger.error('Malformed JSON (GetUserAuthTokenResult): %s', resp.json())
         return
     token = result.get('UserAuthToken', None)
     if not token:
-        _LOGGER.error('Malformed JSON (UserAuthToken): %s', resp.json())
+        logger.error('Malformed JSON (UserAuthToken): %s', resp.json())
         return
     return token
 
@@ -61,6 +60,7 @@ class SwapAuthToken(sleekxmpp.ClientXMPP):
 
         Args:
           token: The base64 string containing the 48-byte Login Token.
+
         """
         plugin_config = {
             # Enables PLAIN authentication which is off by default.
@@ -91,7 +91,7 @@ class SwapAuthToken(sleekxmpp.ClientXMPP):
         match = re.search(r'identity=(?P<uuid>[\w-]+):status', oa_resp.text)
         assert match
         self.uuid = match.group('uuid')
-        _LOGGER.info('Received UUID from device: %s', self.uuid)
+        logger.info('Received UUID from device: %s', self.uuid)
         self.disconnect(send_close=False)
 
 
@@ -99,15 +99,14 @@ def swap_auth_token(ip_address, port, token):
     """Swaps the Logitech auth token for a session token.
 
     Args:
-      ip_address: IP Address of the Harmony device.
-      port: Port that the Harmony device is listening on.
-      token: A base64-encoded string containing a 48-byte Login Token.
+        ip_address (str): IP Address of the Harmony device IP address
+        port (str): Harmony device port
+        token (str): A base64-encoded string containing a 48-byte Login Token.
 
     Returns:
-      A string containing the session token.
+        A string containing the session token.
     """
     login_client = SwapAuthToken(token)
-    login_client.connect(address=(ip_address, port),
-                         use_tls=False, use_ssl=False)
+    login_client.connect(address=(ip_address, port),use_tls=False, use_ssl=False)
     login_client.process(block=True)
     return login_client.uuid

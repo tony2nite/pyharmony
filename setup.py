@@ -20,11 +20,11 @@ requirements = [x.strip() for x in open(here('requirements.txt')).readlines()]
 
 setup(
     name='pyharmony',
-    version='0.1.0',
+    version='0.2.0',
     description='',
     long_description=readme,
-    author='Bennett Kanuka',
-    author_email='bkanuka@gmail.com',
+    author='Ian Day',
+    author_email='iandday@gmail.com',
     url='https://github.com/bkanuka/pyharmony',
     packages=[
         'pyharmony',
@@ -41,11 +41,9 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.5'
     ],
     entry_points={
         'console_scripts': [

@@ -1,16 +1,16 @@
-"""Client class for connecting to the Logitech Harmony."""
+"""Client class for connecting to Logitech Harmony devices."""
+
 import json
 import time
 import sleekxmpp
 from sleekxmpp.xmlstream import ET
 
 
-
 class HarmonyClient(sleekxmpp.ClientXMPP):
-    """An XMPP client for connecting to the Logitech Harmony."""
+    """An XMPP client for connecting to the Logitech Harmony devices."""
 
     def __init__(self, auth_token):
-        user='%s@connect.logitech.com/gatorade.' % auth_token
+        user = '%s@connect.logitech.com/gatorade.' % auth_token
         password = auth_token
         plugin_config = {
             # Enables PLAIN authentication which is off by default.
@@ -23,7 +23,7 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         """Retrieves the Harmony device configuration.
 
         Returns:
-          A nested dictionary containing activities, devices, etc.
+            A nested dictionary containing activities, devices, etc.
         """
         iq_cmd = self.Iq()
         iq_cmd['type'] = 'get'
@@ -41,10 +41,10 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         return json.loads(device_list)
 
     def get_current_activity(self):
-        """Retrieves the current activity.
+        """Retrieves the current activity ID.
 
         Returns:
-          A int with the activity ID.
+            A int with the current activity ID.
         """
         iq_cmd = self.Iq()
         iq_cmd['type'] = 'get'
@@ -68,7 +68,7 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
             activity_id: An int or string identifying the activity to start
 
         Returns:
-          A nested dictionary containing activities, devices, etc.
+            True if activity started, otherwise False
         """
         iq_cmd = self.Iq()
         iq_cmd['type'] = 'get'
@@ -82,7 +82,10 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         payload = result.get_payload()
         assert len(payload) == 1
         action_cmd = payload[0]
-        return action_cmd.text
+        if action_cmd.text == None:
+            return True
+        else:
+            return False
 
     def sync(self):
         """Syncs the harmony hub with the web service.
@@ -99,6 +102,13 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
 
     def send_command(self, device_id, command):
         """Send a simple command to the Harmony Hub.
+
+        Args:
+            device_id (str): Device ID from Harmony Hub configuration to control
+            command (str): Command from Harmony Hub configuration to control
+
+        Returns:
+            None if successful
         """
         iq_cmd = self.Iq()
         iq_cmd['type'] = 'get'
@@ -116,41 +126,37 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"' + device_id + '","command"::"' + command + '"}:status=release'
         iq_cmd.set_payload(action_cmd)
         result = iq_cmd.send(block=False)
-
         return result
 
     def power_off(self):
         """Turns the system off if it's on, otherwise it does nothing.
 
         Returns:
-          True.
+            True
         """
         activity = self.get_current_activity()
-        print(activity)
         if activity != -1:
-            print("OFF")
-            self.start_activity(-1)
-        return True
+            if self.start_activity(-1):
+                return True
+            else:
+                return False
 
 
 def create_and_connect_client(ip_address, port, token):
     """Creates a Harmony client and initializes session.
 
     Args:
-      ip_address: IP Address of the Harmony device.
-      port: Port that the Harmony device is listening on.
-      token: A string containing a session token.
+        ip_address (str): Harmony device IP address
+        port (str): Harmony device port
+        token (str): Valid session token
 
     Returns:
-      An instance of HarmonyClient that is connected.
+        A connected HarmonyClient instance
     """
     client = HarmonyClient(token)
-    # LOGGER.fatal('PreConnect')
     client.connect(address=(ip_address, port),
                    use_tls=False, use_ssl=False)
     client.process(block=False)
-
     while not client.sessionstarted:
         time.sleep(0.1)
-
     return client

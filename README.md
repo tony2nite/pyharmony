@@ -1,14 +1,15 @@
 pyharmony
 =======
 
-Python library for progarmmatically using a Logitech Harmony Link or Ultimate Hub.
+Python library for programmatically using a Logitech Harmony Link or Ultimate Hub.
 
-A fork of [petele/pyharmony](https://github.com/petele/pyharmony) with the intent to:
+A fork of [bkanuka/pyharmony](https://github.com/bkanuka/pyharmony) with the intent to:
 - Make pip/setup.py installable.
 - Unify improvments made in other forks.
 - Configurable for Harmony Link/Hub differences.
 - Better practices for project layout.
 - Better error handling!
+- Inclusion into Home Assistant (https://home-assistant.io)
 
 Protocol
 --------
@@ -21,19 +22,15 @@ Status
 * Authentication to Logitech's web service working.
 * Authentication to harmony device working.
 * Querying for entire device information
-* Sending a simple command to harmony device working.
+* Querying for activity information only
+* Querying for current activity
+* Starting Activity
+* Sending Command
 
 Usage
 -----
 
-To query your device's configuration state:
-
-    PYTHONPATH="." python harmony --email user@example.com --password pass \
-        --harmony_ip 192.168.0.1 show_config
-
-For full argument information on the command-line tool:
-
-    PYTHONPATH="." python harmony
+!!
 
 TODO
 ----
