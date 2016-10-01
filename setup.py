@@ -25,7 +25,7 @@ setup(
     long_description=readme,
     author='Ian Day',
     author_email='iandday@gmail.com',
-    url='https://github.com/bkanuka/pyharmony',
+    url='https://github.com/iandday/pyharmony',
     packages=[
         'pyharmony',
     ],
