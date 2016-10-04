@@ -100,7 +100,7 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         payload = result.get_payload()
         assert len(payload) == 1
 
-    def send_command(self, device_id, command):
+    def send_command(self, device, command):
         """Send a simple command to the Harmony Hub.
 
         Args:
@@ -117,13 +117,13 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         action_cmd.attrib['xmlns'] = 'connect.logitech.com'
         action_cmd.attrib['mime'] = (
             'vnd.logitech.harmony/vnd.logitech.harmony.engine?holdAction')
-        action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"' + device_id + '","command"::"' + command + '"}:status=press'
+        action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"' + device + '","command"::"' + command + '"}:status=press'
         iq_cmd.set_payload(action_cmd)
         result = iq_cmd.send(block=False)
 
         action_cmd.attrib['mime'] = (
             'vnd.logitech.harmony/vnd.logitech.harmony.engine?holdAction')
-        action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"' + device_id + '","command"::"' + command + '"}:status=release'
+        action_cmd.text = 'action={"type"::"IRCommand","deviceId"::"' + device + '","command"::"' + command + '"}:status=release'
         iq_cmd.set_payload(action_cmd)
         result = iq_cmd.send(block=False)
         return result

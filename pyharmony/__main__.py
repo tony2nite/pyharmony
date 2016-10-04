@@ -12,7 +12,7 @@ import sys
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
-# Trim down log file spam from imported modules
+# Trim down log file spam
 logging.getLogger('sleekxmpp').setLevel(logging.CRITICAL)
 logging.getLogger('requests').setLevel(logging.CRITICAL)
 logging.getLogger('pyharmony').setLevel(logging.CRITICAL)
@@ -65,7 +65,7 @@ def get_client(email, password, harmony_ip, harmony_port):
 
 # Functions for use when module is imported
 def ha_get_config(email, password, harmony_ip, harmony_port):
-    """Connects to the Harmony and generates a text file containing all activites and commands programmed to hub.
+    """Connects to the Harmony and generates a dictionary containing all activites and commands programmed to hub.
 
     Args:
         email (str):  Email address used to login to Logitech service
@@ -106,7 +106,7 @@ def ha_get_config_file(email, password, harmony_ip, harmony_port, path):
 
         file_out.write('\nDevice Commands\n')
         for device in config['device']:
-            file_out.write('  ' + device['deviceId'] + ' - ' + device['label'] + '\n')
+            file_out.write('  ' + device['id'] + ' - ' + device['label'] + '\n')
             for controlGroup in device['controlGroup']:
                 for function in controlGroup['function']:
                     file_out.write('    ' + function['name'] + '\n')
@@ -226,7 +226,7 @@ def ha_power_off(email, password, harmony_ip, harmony_port):
         return False
 
 
-def ha_send_command(email, password, harmony_ip, harmony_port, device_id, new_command):
+def ha_send_command(email, password, harmony_ip, harmony_port, device, command):
     """Connects to the Harmony and send a simple command.
 
     Args:
@@ -239,10 +239,10 @@ def ha_send_command(email, password, harmony_ip, harmony_port, device_id, new_co
 
     Returns:
         Completion status
-        ###RESULT TEXT
     """
+
     client = get_client(email, password, harmony_ip, harmony_port)
-    client.send_command(device_id, new_command)
+    client.send_command(device, command)
     client.disconnect(send_close=True)
     return 0
 
@@ -264,7 +264,7 @@ def ha_sync(email, password, harmony_ip, harmony_port):
     return 0
 
 
-# Functions for Use on Command Line
+# Functions for use on command line
 def show_config(args):
     """Connects to the Harmony and return current configuration.
 
