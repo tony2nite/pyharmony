@@ -9,6 +9,7 @@ import logging
 from pyharmony import auth as harmony_auth
 from pyharmony import client as harmony_client
 import sys
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -241,9 +242,9 @@ def ha_send_command(email, password, harmony_ip, harmony_port, device, command):
     Returns:
         Completion status
     """
-
     client = get_client(email, password, harmony_ip, harmony_port)
     client.send_command(device, command)
+    time.sleep(1)
     client.disconnect(send_close=True)
     return 0
 
