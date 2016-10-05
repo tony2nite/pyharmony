@@ -26,7 +26,7 @@ setup(
     author='Ian Day',
     author_email='iandday@gmail.com',
     url='https://github.com/iandday/pyharmony',
-    download_url = 'https://github.com/iandday/pyharmony/tarball/1.0.1',
+    download_url = 'https://github.com/iandday/pyharmony/tarball/1.0.2',
     packages=['pyharmony'],
     package_dir={'pyharmony': 'pyharmony'},
     include_package_data=True,
