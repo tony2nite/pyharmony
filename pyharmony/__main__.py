@@ -104,7 +104,7 @@ def ha_get_config_file(email, password, harmony_ip, harmony_port, path):
     with open(path, 'w+') as file_out:
         file_out.write('Activities\n')
         for activity in config['activity']:
-            file_out.write('  ' + activity['label'] + '\n')
+            file_out.write('  ' + activity['id'] + ' - ' + activity['label'] + '\n')
 
         file_out.write('\nDevice Commands\n')
         for device in config['device']:
