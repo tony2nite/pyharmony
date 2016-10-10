@@ -201,7 +201,7 @@ def ha_start_activity(email, password, harmony_ip, harmony_port, new_activity):
         if status:
             return True
         else:
-            logger.error('found too many activities! %s' % (' '.join(matching)))
+            logger.error('Unable to find matching activity, start failed %s' % (' '.join(matching)))
             return False
 
 

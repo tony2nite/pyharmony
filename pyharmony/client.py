@@ -7,7 +7,9 @@ import json
 import time
 import sleekxmpp
 from sleekxmpp.xmlstream import ET
+import logging
 
+logger = logging.getLogger(__name__)
 
 class HarmonyClient(sleekxmpp.ClientXMPP):
     """An XMPP client for connecting to the Logitech Harmony devices."""
@@ -35,7 +37,11 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         action_cmd.attrib['mime'] = (
             'vnd.logitech.harmony/vnd.logitech.harmony.engine?config')
         iq_cmd.set_payload(action_cmd)
-        result = iq_cmd.send(block=True)
+        try:
+            result = iq_cmd.send(block=True)
+        except Exception:
+            logger.info('XMPP timeout, reattempting')
+            result = iq_cmd.send(block=True)
         payload = result.get_payload()
         assert len(payload) == 1
         action_cmd = payload[0]
@@ -56,7 +62,11 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         action_cmd.attrib['mime'] = (
             'vnd.logitech.harmony/vnd.logitech.harmony.engine?getCurrentActivity')
         iq_cmd.set_payload(action_cmd)
-        result = iq_cmd.send(block=True)
+        try:
+            result = iq_cmd.send(block=True)
+        except Exception:
+            logger.info('XMPP timeout, reattempting')
+            result = iq_cmd.send(block=True)
         payload = result.get_payload()
         assert len(payload) == 1
         action_cmd = payload[0]
@@ -81,7 +91,11 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         cmd = 'activityId=' + str(activity_id) + ':timestamp=0'
         action_cmd.text = cmd
         iq_cmd.set_payload(action_cmd)
-        result = iq_cmd.send(block=True)
+        try:
+            result = iq_cmd.send(block=True)
+        except Exception:
+            logger.info('XMPP timeout, reattempting')
+            result = iq_cmd.send(block=True)
         payload = result.get_payload()
         assert len(payload) == 1
         action_cmd = payload[0]
@@ -99,7 +113,11 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         action_cmd.attrib['xmlns'] = 'connect.logitech.com'
         action_cmd.attrib['mime'] = ('setup.sync')
         iq_cmd.set_payload(action_cmd)
-        result = iq_cmd.send(block=True)
+        try:
+            result = iq_cmd.send(block=True)
+        except Exception:
+            logger.info('XMPP timeout, reattempting')
+            result = iq_cmd.send(block=True)
         payload = result.get_payload()
         assert len(payload) == 1
 
