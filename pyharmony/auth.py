@@ -35,18 +35,20 @@ def login(username, password):
     data = json.dumps(data)
     resp = requests.post(LOGITECH_AUTH_URL, headers=headers, data=data)
     if resp.status_code != 200:
-        logger.error('Received response code %d from Logitech.',
-                     resp.status_code)
-        logger.error('Data: \n%s\n', resp.text)
+        logger.critical('Received response code %d from Logitech.',resp.status_code)
+        logger.critical('Data: \n%s\n', resp.text)
+        raise ValueError('Logitech login failed')
         return
 
     result = resp.json().get('GetUserAuthTokenResult', None)
     if not result:
-        logger.error('Malformed JSON (GetUserAuthTokenResult): %s', resp.json())
+        logger.critical('Malformed JSON (GetUserAuthTokenResult): %s', resp.json())
+        raise ValueError('Logitech login failed')
         return
     token = result.get('UserAuthToken', None)
     if not token:
-        logger.error('Malformed JSON (UserAuthToken): %s', resp.json())
+        logger.critical('Malformed JSON (UserAuthToken): %s', resp.json())
+        raise ValueError('Logitech login failed')
         return
     return token
 
