@@ -37,11 +37,20 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
         action_cmd.attrib['mime'] = (
             'vnd.logitech.harmony/vnd.logitech.harmony.engine?config')
         iq_cmd.set_payload(action_cmd)
-        try:
-            result = iq_cmd.send(block=True)
-        except Exception:
-            logger.info('XMPP timeout, reattempting')
-            result = iq_cmd.send(block=True)
+        retries = 3
+        attempt = 0
+
+        for _ in range(retries):
+            try:
+                result = iq_cmd.send(block=True)
+                break
+            except Exception:
+                logger.critical('XMPP timeout, reattempting')
+                attempt += 1
+                pass
+        if attempt == 3:
+            raise ValueError('XMPP timeout with hub')
+
         payload = result.get_payload()
         assert len(payload) == 1
         action_cmd = payload[0]
