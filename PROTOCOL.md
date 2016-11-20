@@ -16,10 +16,10 @@ listens on port 5222.
 The first step in authenticating is sending a Logitech username and password to
 a Logitech web service. The endpoint for getting an authentication token is:
 
-    https://svcs.myharmony.com/CompositeSecurityServices/Security.svc/json/GetUserAuthToken
+    https://setup.myharmony.com/martiniweb/account/ProceedWithLIPLogin?provider=hp&state=&toucheck=True
 
 A POST request is sent to this URL with a payload of JSON. The `Content-Type`
-request header must be set to `application/json; charset=utf-8` and the body of
+request header must be set to `application/json; charset=utf-8`. and the body of
 the request should contain JSON like this:
 
     {
@@ -29,14 +29,39 @@ the request should contain JSON like this:
 
 The response will also be JSON of the form:
 
-    {
-      "GetUserAuthTokenResult": {
-        "AccountId": 0,
-        "UserAuthToken": "xyzxyz"
-      }
+     {
+      "id_token": "xyzxyz", 
+      "access_toklen": "xyzxyz"
+      "refresh_token": "xyzxyz", 
+      "expires_in": "7200"
+      "email_verified": "false", 
     }
 
-The value of `UserAuthToken` is a base64 string containing 48 bytes of data.
+
+The second step in authenticating is sending the id_token and access_token to the following URL:
+
+    https://svcs.myharmony.com/CompositeSecurityServices/Security.svc/json2/signin
+
+A POST request is sent to this URL with a payload of JSON. The `Content-Type`
+request header must be set to `application/json; charset=utf-8`. and the body of
+the request should contain JSON like this:
+
+     {
+      "id_token": "xyzxyz", 
+      "access_toklen": "xyzxyz"
+     }
+     
+The response will also be JSON of the form:
+
+     {
+      "AuthToken": "xyzxyz", 
+      "IsLockedOut": "False"
+      "AccountId": "12345", 
+      "IsNewUser": "False"
+      "Email": "foo@example.com", 
+    }
+
+The value of `AuthToken` is a base64 string containing 48 bytes of data.
 This token, which I will call the "Login Token", is used in the next step.
 
 ### Obtaining Session Token

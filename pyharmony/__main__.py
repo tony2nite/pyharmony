@@ -153,7 +153,7 @@ def ha_get_activities(config):
     if activities != {}:
         return activities
     else:
-        logger.error('Unable to hub\'s activities')
+        logger.error('Unable to retrieve hub\'s activities')
         return activities
 
 

@@ -16,8 +16,10 @@ from sleekxmpp.xmlstream import ET
 logger = logging.getLogger(__name__)
 
 #Logitech authentication service URL.
-LOGITECH_AUTH_URL = ('https://svcs.myharmony.com/CompositeSecurityServices/'
-                     'Security.svc/json/GetUserAuthToken')
+LOGITECH_AUTH_URL_1 = ('https://setup.myharmony.com/martiniweb/account/'
+                      'ProceedWithLIPLogin?provider=hp&state=&toucheck=True')
+LOGITECH_AUTH_URL_2 = ('https://svcs.myharmony.com/CompositeSecurityServices/'
+                        'Security.svc/json2/signin')
 
 
 def login(username, password):
@@ -33,21 +35,39 @@ def login(username, password):
     headers = {'content-type': 'application/json; charset=utf-8'}
     data = {'email': username, 'password': password}
     data = json.dumps(data)
-    resp = requests.post(LOGITECH_AUTH_URL, headers=headers, data=data)
+    resp = requests.post(LOGITECH_AUTH_URL_1, headers=headers, data=data)
     if resp.status_code != 200:
         logger.critical('Received response code %d from Logitech.',resp.status_code)
         logger.critical('Data: \n%s\n', resp.text)
         raise ValueError('Logitech login failed')
         return
 
-    result = resp.json().get('GetUserAuthTokenResult', None)
-    if not result:
-        logger.critical('Malformed JSON (GetUserAuthTokenResult): %s', resp.json())
-        raise ValueError('Logitech login failed')
-        return
-    token = result.get('UserAuthToken', None)
+    resp_dict = json.loads(resp.json())
+    id_token = resp_dict['id_token']
+    access_token = resp_dict['access_token']
+    refresh_token = resp_dict['refresh_token']
+    expires_in = resp_dict['expires_in']
+    email_verified = resp_dict['email_verified']
+    logger.debug('First stage authentication results:')
+    logger.debug('id_token:', id_token)
+    logger.debug('access_token:', access_token)
+    logger.debug('refresh_token:', refresh_token)
+    logger.debug('expires_in:', expires_in)
+    logger.debug('email_verified:', email_verified)
+
+    data = {'id_token': id_token, 'access_token': access_token }
+    data = json.dumps(data)
+    resp = requests.post(LOGITECH_AUTH_URL_2, headers=headers, data=data)
+    logger.debug('Second stage authentication results:')
+    logger.debug('AuthToken:', resp.json().get('AuthToken', None))
+    logger.debug('IsNewUser:', resp.json().get('IsNewUser', None))
+    logger.debug('Email:', resp.json().get('Email', None))
+    logger.debug('IsLockedOut:', resp.json().get('IsLockedOut', None))
+    logger.debug('AccountId:', resp.json().get('AccountId', None))
+
+    token = resp.json().get('AuthToken', None)
     if not token:
-        logger.critical('Malformed JSON (UserAuthToken): %s', resp.json())
+        logger.critical('Malformed JSON (AuthToken): %s', resp.json())
         raise ValueError('Logitech login failed')
         return
     return token
