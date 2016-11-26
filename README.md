@@ -32,6 +32,14 @@ Usage
 
 Pyharmony - Harmony device control
 
+```
+usage: harmony [-h] --harmony_ip HARMONY_IP [--harmony_port HARMONY_PORT]
+               [--loglevel {CRITICAL,ERROR,DEBUG,WARNING,INFO}]
+               {show_config,show_current_activity,start_activity,power_off,sync,send_command}
+               ...
+
+Pyharmony - Harmony device control
+
 positional arguments:
   {show_config,show_current_activity,start_activity,power_off,sync,send_command}
     show_config         Print the Harmony device configuration.
@@ -47,16 +55,13 @@ optional arguments:
   --harmony_port HARMONY_PORT
                         Network port that the Harmony is listening on.
                         (default: 5222)
-  --loglevel {DEBUG,INFO,WARNING,CRITICAL,ERROR}
+  --loglevel {CRITICAL,ERROR,DEBUG,WARNING,INFO}
                         Logging level to print to the console. (default: INFO)
 
 required arguments:
-  --email EMAIL         Logitech username in the form of an email address.
-                        (default: None)
-  --password PASSWORD   Logitech password. (default: None)
   --harmony_ip HARMONY_IP
                         IP Address of the Harmony device. (default: None)
-
+```
 
 TODO
 ----

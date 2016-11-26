@@ -6,68 +6,13 @@ with the Harmony Link device.
 ## Harmony Link Device
 
 The Logitech Harmony Link connects to your home wireless network and obtains an
-IP address. It runs an [XMPP](http://en.wikipedia.org/wiki/XMPP) server that
-listens on port 5222.
+IP address. It runs an [XMPP](http://en.wikipedia.org/wiki/XMPP) server that listens on port 5222.
 
 ## Authentication
 
-### Obtaining Login Token
-
-The first step in authenticating is sending a Logitech username and password to
-a Logitech web service. The endpoint for getting an authentication token is:
-
-    https://setup.myharmony.com/martiniweb/account/ProceedWithLIPLogin?provider=hp&state=&toucheck=True
-
-A POST request is sent to this URL with a payload of JSON. The `Content-Type`
-request header must be set to `application/json; charset=utf-8`. and the body of
-the request should contain JSON like this:
-
-    {
-      "password": "secret", 
-      "email": "foo@example.com"
-    }
-
-The response will also be JSON of the form:
-
-     {
-      "id_token": "xyzxyz", 
-      "access_toklen": "xyzxyz"
-      "refresh_token": "xyzxyz", 
-      "expires_in": "7200"
-      "email_verified": "false", 
-    }
-
-
-The second step in authenticating is sending the id_token and access_token to the following URL:
-
-    https://svcs.myharmony.com/CompositeSecurityServices/Security.svc/json2/signin
-
-A POST request is sent to this URL with a payload of JSON. The `Content-Type`
-request header must be set to `application/json; charset=utf-8`. and the body of
-the request should contain JSON like this:
-
-     {
-      "id_token": "xyzxyz", 
-      "access_toklen": "xyzxyz"
-     }
-     
-The response will also be JSON of the form:
-
-     {
-      "AuthToken": "xyzxyz", 
-      "IsLockedOut": "False"
-      "AccountId": "12345", 
-      "IsNewUser": "False"
-      "Email": "foo@example.com", 
-    }
-
-The value of `AuthToken` is a base64 string containing 48 bytes of data.
-This token, which I will call the "Login Token", is used in the next step.
-
 ### Obtaining Session Token
 
-Once the login token is obtained, a session token must be obtained. This is done
-by logging into the Harmony device with username `guest@x.com` and password
+A session token is obtained by logging into the Harmony device with username `guest@x.com` and password
 `guest`. The login process uses the XMPP SASL PLAIN authentication standard
 (XEP-0034).
 
