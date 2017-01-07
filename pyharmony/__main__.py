@@ -213,7 +213,7 @@ def ha_power_off(token, ip, port):
         return False
 
 
-def ha_send_command(token, ip, port, device, command):
+def ha_send_command(token, ip, port, device, command, repeat_num=1, delay_secs=0.4):
     """Connects to the Harmony and send a simple command.
 
     Args:
@@ -222,12 +222,40 @@ def ha_send_command(token, ip, port, device, command):
         port (str): Harmony hub port
         device (str): Device ID from Harmony Hub configuration to control
         command (str): Command from Harmony Hub configuration to control
+        repeat_num (int) : Number of times to repeat the command. Defaults to 1
+        delay_secs (float): Delay between sending repeated commands. Not used if only sending a single command. Defaults to 0.4 seconds
 
     Returns:
         Completion status
     """
     client = ha_get_client(token, ip, port)
-    client.send_command(device, command)
+    for i in range(repeat_num):
+        client.send_command(device, command)
+        time.sleep(delay_secs)
+
+    time.sleep(1)
+    client.disconnect(send_close=True)
+    return 0
+
+def ha_send_commands(token, ip, port, device, commands, delay_secs=0.4):
+    """Connects to the Harmony and send a simple command.
+
+    Args:
+        token (str): Session token obtained from hub
+        ip (str): Harmony hub IP address
+        port (str): Harmony hub port
+        device (str): Device ID from Harmony Hub configuration to control
+        commands (list of str): List of commands from Harmony Hub configuration to send
+        delay_secs (float): Delay between sending commands. Defaults to 0.4 seconds
+
+    Returns:
+        Completion status
+    """
+    client = ha_get_client(token, ip, port)
+    for command in commands:
+        client.send_command(device, command)
+        time.sleep(delay_secs)
+
     time.sleep(1)
     client.disconnect(send_close=True)
     return 0
@@ -340,8 +368,13 @@ def send_command(args):
         args (argparse): Argparse object containing required variables from command line
 
     """
+
+
     client = get_client(args.harmony_ip, args.harmony_port)
-    client.send_command(args.device_id, args.command)
+    for i in range(args.repeat_num):
+        client.send_command(args.device_id, args.command)
+        time.sleep(args.delay_secs)
+
     client.disconnect(send_close=True)
     print('Command Sent')
 
@@ -405,6 +438,8 @@ def main():
     command_parser = subparsers.add_parser('send_command', help='Send a simple command.')
     command_parser.add_argument('--device_id', help='Specify the device id to which we will send the command.')
     command_parser.add_argument('--command', help='IR Command to send to the device.')
+    command_parser.add_argument('--repeat_num', type=int, default=1, help='Number of times to repeat the command. Defaults to 1')
+    command_parser.add_argument('--delay_secs', type=float, default=0.4, help='Delay between sending repeated commands. Not used if only sending a single command. Defaults to 0.4 seconds')
     command_parser.set_defaults(func=send_command)
 
     args = parser.parse_args()
