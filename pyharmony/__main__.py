@@ -43,8 +43,8 @@ def get_client(ip, port):
 
 # Functions for use when module is imported
 
-def ha_get_token(ip, port):
-    token = harmony_auth.get_auth_token(ip, port)
+def ha_get_token(ip, port, timeout=None, retries=None):
+    token = harmony_auth.get_auth_token(ip, port, timeout, retries)
     return token
 
 

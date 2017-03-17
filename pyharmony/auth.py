@@ -44,6 +44,7 @@ class AuthToken(sleekxmpp.ClientXMPP):
         action_cmd.attrib['mime'] = 'vnd.logitech.connect/vnd.logitech.pair'
         action_cmd.text = 'token=%s:name=%s' % (self.token,
                                                 'foo#iOS6.0.1#iPhone')
+
         iq_cmd.set_payload(action_cmd)
         result = iq_cmd.send(block=True)
         payload = result.get_payload()
@@ -57,17 +58,34 @@ class AuthToken(sleekxmpp.ClientXMPP):
         self.disconnect(send_close=False)
 
 
-def get_auth_token(ip_address, port):
+def get_auth_token(ip_address, port, timout=None, retries=None):
     """Swaps the Logitech auth token for a session token.
 
     Args:
         ip_address (str): IP Address of the Harmony device IP address
         port (str): Harmony device port
+        timeout (int): Number of seconds before socket timeout
+        retries (int): Number of times to retry connection
 
     Returns:
-        A string containing the session token.
+        A string containing the session token or False if could not find token
     """
+    if retries:
+        sleekxmpp.xmlstream.xmlstream.RECONNECT_MAX_ATTEMPTS = retries
+
+    if timout:
+        # Override/Patch sleekxmpp's configure_socket method with our timeout
+        def _configure_xmpp_socket(self):
+            self.socket.settimeout(timout)
+        sleekxmpp.xmlstream.XMLStream.configure_socket = _configure_xmpp_socket
+
     login_client = AuthToken()
-    login_client.connect(address=(ip_address, port),use_tls=False, use_ssl=False)
-    login_client.process(block=True)
-    return login_client.uuid
+    connection = login_client.connect(
+        address=(ip_address, port), reattempt=True, use_tls=False, use_ssl=False
+    )
+
+    if connection:
+        login_client.process(block=True)
+        return login_client.uuid
+    else:
+        return False
