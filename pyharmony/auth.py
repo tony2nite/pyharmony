@@ -12,6 +12,8 @@ import sleekxmpp
 
 from sleekxmpp.xmlstream import ET
 
+from pyharmony.client_factory import get_xmpp_client_with_timeout
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,7 +60,7 @@ class AuthToken(sleekxmpp.ClientXMPP):
         self.disconnect(send_close=False)
 
 
-def get_auth_token(ip_address, port, timout=None, retries=None):
+def get_auth_token(ip_address, port, timeout=None, retries=None):
     """Swaps the Logitech auth token for a session token.
 
     Args:
@@ -70,21 +72,21 @@ def get_auth_token(ip_address, port, timout=None, retries=None):
     Returns:
         A string containing the session token or False if could not find token
     """
-    if retries:
-        sleekxmpp.xmlstream.xmlstream.RECONNECT_MAX_ATTEMPTS = retries
 
-    if timout:
-        # Override/Patch sleekxmpp's configure_socket method with our timeout
-        def _configure_xmpp_socket(self):
-            self.socket.settimeout(timout)
-        sleekxmpp.xmlstream.XMLStream.configure_socket = _configure_xmpp_socket
+    login_client = get_xmpp_client_with_timeout(
+        AuthToken,
+        timeout=timeout,
+        retries=retries
+        )
 
-    login_client = AuthToken()
-    connection = login_client.connect(
-        address=(ip_address, port), reattempt=True, use_tls=False, use_ssl=False
+    connected = login_client.connect(
+        address=(ip_address, port),
+        reattempt=True,
+        use_tls=False,
+        use_ssl=False
     )
 
-    if connection:
+    if connected:
         login_client.process(block=True)
         return login_client.uuid
     else:

@@ -9,7 +9,10 @@ import sleekxmpp
 from sleekxmpp.xmlstream import ET
 import logging
 
+from pyharmony.client_factory import get_xmpp_client_with_timeout
+
 logger = logging.getLogger(__name__)
+
 
 class HarmonyClient(sleekxmpp.ClientXMPP):
     """An XMPP client for connecting to the Logitech Harmony devices."""
@@ -172,7 +175,8 @@ class HarmonyClient(sleekxmpp.ClientXMPP):
                 return False
 
 
-def create_and_connect_client(ip_address, port, token):
+def create_and_connect_client(ip_address, port, token,
+                              timeout=None, retries=None):
     """Creates a Harmony client and initializes session.
 
     Args:
@@ -183,10 +187,19 @@ def create_and_connect_client(ip_address, port, token):
     Returns:
         A connected HarmonyClient instance
     """
-    client = HarmonyClient(token)
-    client.connect(address=(ip_address, port),
-                   use_tls=False, use_ssl=False)
+    client = get_xmpp_client_with_timeout(
+        HarmonyClient,
+        token,
+        timeout=timeout,
+        retries=retries)
+
+    connected = client.connect(address=(ip_address, port),
+                               use_tls=False, use_ssl=False)
+    if not connected:
+        return client
+
     client.process(block=False)
     while not client.sessionstarted:
         time.sleep(0.1)
+
     return client

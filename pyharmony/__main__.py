@@ -44,11 +44,11 @@ def get_client(ip, port):
 # Functions for use when module is imported
 
 def ha_get_token(ip, port, timeout=None, retries=None):
-    token = harmony_auth.get_auth_token(ip, port, timeout, retries)
+    token = harmony_auth.get_auth_token(ip, port, timeout=timeout, retries=retries)
     return token
 
 
-def ha_get_client(token, ip, port):
+def ha_get_client(token, ip, port, timeout=None, retries=None):
     """Connect to the Harmony and return a Client instance.
 
     Args:
@@ -59,11 +59,11 @@ def ha_get_client(token, ip, port):
     Returns:
         object: Authenticated client instance.
     """
-    client = harmony_client.create_and_connect_client(ip, port, token)
+    client = harmony_client.create_and_connect_client(ip, port, token, timeout=timeout, retries=retries)
     return client
 
 
-def ha_get_config(token, ip, port):
+def ha_get_config(token, ip, port, timeout=None, retries=None):
     """Connects to the Harmony and generates a dictionary containing all activites and commands programmed to hub.
 
     Args:
@@ -75,7 +75,7 @@ def ha_get_config(token, ip, port):
     Returns:
         Dictionary containing Harmony device configuration
     """
-    client = ha_get_client(token, ip, port)
+    client = ha_get_client(token, ip, port, timeout=timeout, retries=retries)
     config = client.get_config()
     client.disconnect(send_close=True)
     return config
